@@ -11,11 +11,20 @@ hotels_db = [
 ]
 
 
-@app.get("/hotels")
+@app.get("/hotels", summary="Получить отели-ль")
 def get_hotels(city: str | None = Query(default=None, description="Город")):
     if city is None:
         return hotels_db
     return [hotel for hotel in hotels_db if hotel["city"] == city]
+
+
+@app.delete("/hotels/{hotel_id}", summary="Удалить отель")
+def delete_hotel(hotel_id: int):
+    for index, hotel in enumerate(hotels_db):
+        if hotel["id"] == hotel_id:
+            hotels_db.pop(index)
+            return {"status": 200}
+    return {"status": 404}
 
 
 if __name__ == "__main__":
