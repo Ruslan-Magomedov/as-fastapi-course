@@ -35,14 +35,29 @@ def create_hotel(
         city: str | None = Body(default=None, embed=True)
 ):
     """ create hotel by keys hotel_name and city """
-    if not (hotel_name and city):
-        return {"status": 422, "message": "Bad Data"}
-    hotels_db.append({
-            "id": hotels_db[-1]["id"] + 1,
-            "hotel_name": hotel_name,
-            "city": city
-        })
-    return {"status": 200, "message": "OK"}
+    if hotel_name and city:
+        hotels_db.append({
+                "id": hotels_db[-1]["id"] + 1,
+                "hotel_name": hotel_name,
+                "city": city
+            })
+        return {"status": 200, "message": "OK"}
+    return {"status": 422, "message": "Bad Data"}
+
+
+@app.put("/hotels")
+def edit_hotel(
+        hotel_id: int = Query(),
+        hotel_name: str = Body(embed=True),
+        city: str = Body(embed=True)
+):
+    if hotel_id and hotel_name and city:
+        for index, hotel in enumerate(hotels_db):
+            if hotel["id"] == hotel_id:
+                hotels_db[index]["hotel_name"] = hotel_name
+                hotels_db[index]["city"] = city
+                return {"status": 200, "message": "OK"}
+    return {"status": 422, "message": "Bad Data"}
 
 
 if __name__ == "__main__":
