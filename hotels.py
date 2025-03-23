@@ -1,4 +1,5 @@
 from fastapi import Query, Body, APIRouter
+from pydantic import BaseModel
 
 
 router = APIRouter(prefix="/hotels", tags=["Hotels"])
@@ -10,7 +11,12 @@ hotels_db = [
 ]
 
 
-@router.get("/hotels", summary="get hotels")
+class HotelData(BaseModel):
+    hotel_name: str
+    city: str
+
+
+@router.get("", summary="get hotels")
 def get_hotels(city: str | None = Query(default=None)):
     """ head point for get a hotel or hotels by key city """
     if city is None:
@@ -18,43 +24,38 @@ def get_hotels(city: str | None = Query(default=None)):
     return [hotel for hotel in hotels_db if hotel["city"] == city]
 
 
-@router.post("/hotels", summary="create hotel")
-def create_hotel(
-        hotel_name: str | None = Body(default=None, embed=True),
-        city: str | None = Body(default=None, embed=True)
-):
+@router.post("", summary="create hotel")
+def create_hotel(hotel_data: HotelData):
     """ create hotel by keys hotel_name and city """
-    if hotel_name and city:
+    if hotel_data.hotel_name and hotel_data.city:
         hotels_db.append({
                 "id": hotels_db[-1]["id"] + 1,
-                "hotel_name": hotel_name,
-                "city": city
+                "hotel_name": hotel_data.hotel_name,
+                "city": hotel_data.city
             })
         return {"status": 200, "message": "OK"}
     return {"status": 422, "message": "Bad Data"}
 
 
-@router.put("/hotels/{hotel_id}", summary="edit hotel")
-def edit_hotel(
-        hotel_id: int,
-        hotel_name: str = Body(embed=True),
-        city: str = Body(embed=True)
-):
-    if hotel_id and hotel_name and city:
+@router.put("/{hotel_id}", summary="edit hotel")
+def edit_hotel(hotel_id: int, hotel_data: HotelData):
+    """ edit hotel by key hotel_id """
+    if hotel_id and hotel_data.hotel_name and hotel_data.city:
         for index, hotel in enumerate(hotels_db):
             if hotel["id"] == hotel_id:
-                hotels_db[index]["hotel_name"] = hotel_name
-                hotels_db[index]["city"] = city
+                hotels_db[index]["hotel_name"] = hotel_data.hotel_name
+                hotels_db[index]["city"] = hotel_data.city
                 return {"status": 200, "message": "OK"}
     return {"status": 422, "message": "Bad Data"}
 
 
-@router.patch("/hotels/{hotel_id}", summary="partial edit hotel")
+@router.patch("/{hotel_id}", summary="partial edit hotel")
 def partial_edit_hotel(
         hotel_id: int,
         hotel_name: str | None = Body(default=None, embed=True),
         city: str | None = Body(default=None, embed=True)
 ):
+    """ partial edit hotel by key hotel_id """
     if hotel_id:
         for index, hotel in enumerate(hotels_db):
             if hotel["id"] == hotel_id:
@@ -66,7 +67,7 @@ def partial_edit_hotel(
     return {"status": 422, "message": "Bad Data"}
 
 
-@router.delete("/hotels/{hotel_id}", summary="delete hotel")
+@router.delete("/{hotel_id}", summary="delete hotel")
 def delete_hotel(hotel_id: int):
     """ delete hotel by key hotel_id """
     for index, hotel in enumerate(hotels_db):
