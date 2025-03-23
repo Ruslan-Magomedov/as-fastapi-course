@@ -1,5 +1,6 @@
-from fastapi import Query, Body, APIRouter
-from pydantic import BaseModel
+from fastapi import Query, APIRouter
+
+from shemas.hotels import HotelData, HotelDataPatch
 
 
 router = APIRouter(prefix="/hotels", tags=["Hotels"])
@@ -9,11 +10,6 @@ hotels_db = [
     {"id": 3, "hotel_name": "Mica", "city": "Paris"},
     {"id": 4, "hotel_name": "Luo", "city": "Rim"},
 ]
-
-
-class HotelData(BaseModel):
-    hotel_name: str
-    city: str
 
 
 @router.get("", summary="get hotels")
@@ -29,10 +25,10 @@ def create_hotel(hotel_data: HotelData):
     """ create hotel by keys hotel_name and city """
     if hotel_data.hotel_name and hotel_data.city:
         hotels_db.append({
-                "id": hotels_db[-1]["id"] + 1,
-                "hotel_name": hotel_data.hotel_name,
-                "city": hotel_data.city
-            })
+            "id": hotels_db[-1]["id"] + 1,
+            "hotel_name": hotel_data.hotel_name,
+            "city": hotel_data.city
+        })
         return {"status": 200, "message": "OK"}
     return {"status": 422, "message": "Bad Data"}
 
@@ -50,19 +46,15 @@ def edit_hotel(hotel_id: int, hotel_data: HotelData):
 
 
 @router.patch("/{hotel_id}", summary="partial edit hotel")
-def partial_edit_hotel(
-        hotel_id: int,
-        hotel_name: str | None = Body(default=None, embed=True),
-        city: str | None = Body(default=None, embed=True)
-):
+def partial_edit_hotel(hotel_id: int, hotel_data: HotelDataPatch):
     """ partial edit hotel by key hotel_id """
     if hotel_id:
         for index, hotel in enumerate(hotels_db):
             if hotel["id"] == hotel_id:
-                if hotel_name:
-                    hotels_db[index]["hotel_name"] = hotel_name
-                if city:
-                    hotels_db[index]["city"] = city
+                if hotel_data.hotel_name:
+                    hotels_db[index]["hotel_name"] = hotel_data.hotel_name
+                if hotel_data.city:
+                    hotels_db[index]["city"] = hotel_data.city
                 return {"status": 200, "message": "OK"}
     return {"status": 422, "message": "Bad Data"}
 
