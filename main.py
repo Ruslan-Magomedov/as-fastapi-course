@@ -29,7 +29,7 @@ def delete_hotel(hotel_id: int):
     return {"status": 404, "message": "Not Found"}
 
 
-@app.post("/hotels")
+@app.post("/hotels", summary="create hotel")
 def create_hotel(
         hotel_name: str | None = Body(default=None, embed=True),
         city: str | None = Body(default=None, embed=True)
@@ -45,7 +45,7 @@ def create_hotel(
     return {"status": 422, "message": "Bad Data"}
 
 
-@app.put("/hotels")
+@app.put("/hotels", summary="edit hotel")
 def edit_hotel(
         hotel_id: int = Query(),
         hotel_name: str = Body(embed=True),
@@ -56,6 +56,23 @@ def edit_hotel(
             if hotel["id"] == hotel_id:
                 hotels_db[index]["hotel_name"] = hotel_name
                 hotels_db[index]["city"] = city
+                return {"status": 200, "message": "OK"}
+    return {"status": 422, "message": "Bad Data"}
+
+
+@app.patch("/hotel", summary="partial edit hotel")
+def partial_edit_hotel(
+        hotel_id: int = Query(),
+        hotel_name: str | None = Body(default=None, embed=True),
+        city: str | None = Body(default=None, embed=True)
+):
+    if hotel_id:
+        for index, hotel in enumerate(hotels_db):
+            if hotel["id"] == hotel_id:
+                if hotel_name:
+                    hotels_db[index]["hotel_name"] = hotel_name
+                if city:
+                    hotels_db[index]["city"] = city
                 return {"status": 200, "message": "OK"}
     return {"status": 422, "message": "Bad Data"}
 
