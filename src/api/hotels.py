@@ -1,23 +1,35 @@
 from fastapi import Query, APIRouter
 
-from shemas.hotels import HotelData, HotelDataPatch
+from src.shemas.hotels import HotelData, HotelDataPatch
+from src.api.dependencies import PaginationDep
 
 
 router = APIRouter(prefix="/hotels", tags=["Hotels"])
 hotels_db = [
     {"id": 1, "hotel_name": "lora", "city": "Moscow"},
     {"id": 2, "hotel_name": "Soma", "city": "Rim"},
-    {"id": 3, "hotel_name": "Mica", "city": "Paris"},
+    {"id": 3, "hotel_name": "Mica", "city": "Rim"},
     {"id": 4, "hotel_name": "Luo", "city": "Rim"},
+    {"id": 5, "hotel_name": "lora", "city": "Moscow"},
+    {"id": 6, "hotel_name": "Soma", "city": "Rim"},
+    {"id": 7, "hotel_name": "Mica", "city": "Paris"},
+    {"id": 8, "hotel_name": "Luo", "city": "Moscow"},
 ]
 
 
 @router.get("", summary="get hotels")
-def get_hotels(city: str | None = Query(default=None)):
+def get_hotels(pagination: PaginationDep,
+               city: str | None = Query(None)):
     """ head point for get a hotel or hotels by key city """
-    if city is None:
-        return hotels_db
-    return [hotel for hotel in hotels_db if hotel["city"] == city]
+    hotels__ = []
+    for hotel in hotels_db:
+        if city and hotel["city"] != city:
+            continue
+        hotels__.append(hotel)
+
+    if pagination.page and pagination.per_page:
+        return hotels__[pagination.per_page * (pagination.page - 1):][:pagination.per_page]
+    return hotels__
 
 
 @router.post("", summary="create hotel")
